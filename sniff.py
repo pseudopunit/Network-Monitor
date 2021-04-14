@@ -66,20 +66,19 @@ def getPackets():
 
 
 def collect():
-	global data_ip, domains
+	global data_ip, domains, data_out
 	data = data_ip.copy()
-	print(data)
+	# print(data)
 	for k, v in data.items():
 		if k not in domains:
 			try:
 				x = requests.get("https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=at_I6neX943tKNsqzugfEWuHSejCJ471&domainName={}&outputFormat=JSON".format(k))
 				org = x.json()['WhoisRecord']['registryData']['registrant']['organization']
 				domains[k] = org
-				print(org)
+				# print(org)
 			except:
 				pass
 
-	data_out = dict()
 	for (k, v) in data.items():
 		for (k2, v2) in domains.items():
 			if(k == k2):
@@ -92,21 +91,29 @@ def collect():
 		json.dump(domains, dnfile)
 
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.connect(("8.8.8.8", 80))
-our_ip = s.getsockname()[0].strip()
-s.close()
-s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-data_ip = {}
-try:
-	with open('data/domain.json') as dnfile:
-		domains = json.load(dnfile)
-except:
-	domains = dict()
-Thread(target=getPackets).start()
-while True:
-	collect()
-	time.sleep(10)
+
+if __name__ == "__main__":
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	s.connect(("8.8.8.8", 80))
+	our_ip = s.getsockname()[0].strip()
+	s.close()
+	s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+	data_ip = dict()
+	try:
+		with open('data/domain.json') as dnfile:
+			domains = json.load(dnfile)
+	except:
+		domains = dict()
+	try:
+		with open('data/data.json') as infile:
+			data_out = json.load(infile)
+	except:
+		data_out = dict()
+
+	Thread(target=getPackets).start()
+	while True:
+		collect()
+		time.sleep(10)
 
 
 # total = 0
